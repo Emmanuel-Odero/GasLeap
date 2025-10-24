@@ -1,0 +1,22 @@
+[package]
+name = "gasleap-sponsorship-rpc-runtime-api"
+version = "0.1.0"
+authors = ["GasLeap Team"]
+edition = "2021"
+license = "Apache-2.0"
+homepage = "https://gasleap.dev"
+repository = "https://github.com/gasleap/gasleap"
+description = "Runtime API for GasLeap sponsorship pallet RPC"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
+sp-api = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v1.0.0" }
+
+[features]
+default = ["std"]
+std = [
+	"codec/std",
+	"sp-api/std",
+	"sp-std/std",
+]
