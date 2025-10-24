@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+# Install curl for health checks
+RUN apk add --no-cache curl bash
+
+WORKDIR /app
+
+# Copy package.json and install dependencies
+COPY package.json ./
+RUN npm install
+
+# Copy seeding scripts
+COPY seed-demo-data.js ./
+COPY seed-demo-data.sh ./
+RUN chmod +x seed-demo-data.sh
+
+# Create data directory
+RUN mkdir -p /data
+
+# Run seeding script
+CMD ["npm", "run", "seed"]

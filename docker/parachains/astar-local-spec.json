@@ -1,0 +1,48 @@
+{
+  "name": "Astar Local",
+  "id": "astar-local",
+  "chainType": "Local",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "astar-local",
+  "properties": {
+    "tokenDecimals": 18,
+    "tokenSymbol": "ASTR"
+  },
+  "relay_chain": "gasleap-local-relay",
+  "para_id": 2006,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": "0x"
+      },
+      "balances": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 1000000000000000000000],
+          ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 1000000000000000000000],
+          ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 1000000000000000000000],
+          ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 1000000000000000000000]
+        ]
+      },
+      "parachainInfo": {
+        "parachainId": 2006
+      },
+      "assets": {
+        "assets": [
+          [0, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", true, 1],
+          [1, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", true, 1]
+        ],
+        "metadata": [
+          [0, "Demo NFT", "DNFT", 0],
+          [1, "Demo Token", "DTKN", 18]
+        ],
+        "accounts": [
+          [0, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000],
+          [1, "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000000000]
+        ]
+      }
+    }
+  }
+}

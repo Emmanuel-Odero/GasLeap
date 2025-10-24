@@ -1,0 +1,90 @@
+{
+  "name": "GasLeap Local Relay Chain",
+  "id": "gasleap-local-relay",
+  "chainType": "Local",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "gasleap-local",
+  "properties": {
+    "tokenDecimals": 12,
+    "tokenSymbol": "DOT"
+  },
+  "relay_chain": null,
+  "para_id": null,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": "0x"
+      },
+      "balances": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 1000000000000000],
+          ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 1000000000000000]
+        ]
+      },
+      "session": {
+        "keys": [
+          [
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            {
+              "grandpa": "5FA9nQDVg267DEd8m1ZypXLBnvN7SFxYwV7ndqSYGiN9TTpu",
+              "babe": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "im_online": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "para_validator": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "para_assignment": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "authority_discovery": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+            }
+          ]
+        ]
+      },
+      "staking": {
+        "validatorCount": 1,
+        "minimumValidatorCount": 1,
+        "invulnerables": ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"],
+        "forceEra": "NotForcing",
+        "slashRewardFraction": 1000000000,
+        "canceledPayout": 0,
+        "stakers": [
+          [
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            100000000000000,
+            "Validator"
+          ]
+        ]
+      },
+      "paras": {
+        "paras": [
+          [2000, {
+            "genesis_head": "0x00",
+            "validation_code": "0x00",
+            "parachain": true
+          }],
+          [2006, {
+            "genesis_head": "0x00", 
+            "validation_code": "0x00",
+            "parachain": true
+          }],
+          [2034, {
+            "genesis_head": "0x00",
+            "validation_code": "0x00", 
+            "parachain": true
+          }]
+        ]
+      },
+      "hrmp": {
+        "preopenHrmpChannels": [
+          [2000, 2006, 1000, 102400],
+          [2006, 2000, 1000, 102400],
+          [2000, 2034, 1000, 102400],
+          [2034, 2000, 1000, 102400],
+          [2006, 2034, 1000, 102400],
+          [2034, 2006, 1000, 102400]
+        ]
+      }
+    }
+  }
+}

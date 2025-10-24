@@ -1,0 +1,53 @@
+{
+  "name": "Acala Local",
+  "id": "acala-local", 
+  "chainType": "Local",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "acala-local",
+  "properties": {
+    "tokenDecimals": 12,
+    "tokenSymbol": "ACA"
+  },
+  "relay_chain": "gasleap-local-relay",
+  "para_id": 2034,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": "0x"
+      },
+      "balances": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 1000000000000000],
+          ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 1000000000000000],
+          ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 1000000000000000],
+          ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 1000000000000000]
+        ]
+      },
+      "parachainInfo": {
+        "parachainId": 2034
+      },
+      "tokens": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", {"Token": "ACA"}, 1000000000000000],
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", {"Token": "AUSD"}, 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", {"Token": "ACA"}, 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", {"Token": "AUSD"}, 1000000000000000]
+        ]
+      },
+      "dex": {
+        "initialLiquidityPools": [
+          [
+            {"Token": "ACA"},
+            {"Token": "AUSD"},
+            [1000000000000, 1000000000000],
+            [1000000000000, 1000000000000],
+            0
+          ]
+        ]
+      }
+    }
+  }
+}

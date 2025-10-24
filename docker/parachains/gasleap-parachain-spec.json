@@ -1,0 +1,54 @@
+{
+  "name": "GasLeap Parachain",
+  "id": "gasleap-parachain-local",
+  "chainType": "Local",
+  "bootNodes": [],
+  "telemetryEndpoints": null,
+  "protocolId": "gasleap-para",
+  "properties": {
+    "tokenDecimals": 12,
+    "tokenSymbol": "GLAP"
+  },
+  "relay_chain": "gasleap-local-relay",
+  "para_id": 2000,
+  "codeSubstitutes": {},
+  "genesis": {
+    "runtime": {
+      "system": {
+        "code": "0x"
+      },
+      "balances": {
+        "balances": [
+          ["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", 1000000000000000],
+          ["5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty", 1000000000000000],
+          ["5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y", 1000000000000000],
+          ["5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy", 1000000000000000],
+          ["5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw", 1000000000000000]
+        ]
+      },
+      "parachainInfo": {
+        "parachainId": 2000
+      },
+      "sponsorship": {
+        "pools": [
+          [
+            1,
+            {
+              "owner": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+              "balance": 100000000000000,
+              "total_spent": 0,
+              "created_at": 0,
+              "config": {
+                "max_transaction_value": 10000000000000,
+                "daily_spending_limit": 50000000000000,
+                "allowed_chains": [2006, 2034],
+                "authorization_required": false
+              },
+              "status": "Active"
+            }
+          ]
+        ]
+      }
+    }
+  }
+}
