@@ -1,0 +1,305 @@
+# Development Docker Compose for GasLeap
+version: '3.8'
+
+services:
+  # GasLeap parachain node
+  gasleap-node:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.node
+    ports:
+      - "9944:9944"  # WebSocket RPC
+      - "9933:9933"  # HTTP RPC
+      - "30333:30333" # P2P
+    volumes:
+      - gasleap-data:/data
+    environment:
+      - RUST_LOG=info
+    command: [
+      "--dev",
+      "--ws-external",
+      "--rpc-external",
+      "--rpc-cors=all",
+      "--base-path=/data"
+    ]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - gasleap-network
+
+  # Frontend development server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_GASLEAP_ENDPOINT=ws://gasleap-node:9944
+      - REACT_APP_API_ENDPOINT=http://api-server:3003
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - gasleap-node
+      - api-server
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - gasleap-network
+
+  # API Backend Service
+  api-server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api
+    container_name: gasleap-api
+    ports:
+      - "3003:3003"
+    environment:
+      - DATABASE_URL=postgresql://gasleap:gasleap123@postgres-db:5432/gasleap
+      - REDIS_URL=redis://redis-cache:6379
+      - NODE_ENV=development
+      - GASLEAP_NODE_URL=ws://gasleap-node:9944
+    depends_on:
+      - postgres-db
+      - redis-cache
+      - gasleap-node
+    volumes:
+      - ./backend/api:/app
+      - /app/node_modules
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - gasleap-network
+
+  # PostgreSQL Database
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: gasleap-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=gasleap
+      - POSTGRES_USER=gasleap
+      - POSTGRES_PASSWORD=gasleap123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    networks:
+      - gasleap-network
+
+  # Redis Cache
+  redis-cache:
+    image: redis:7-alpine
+    container_name: gasleap-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    networks:
+      - gasleap-network
+
+  # 📧 EMAIL TESTING (MailHog)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: gasleap-mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.1'
+    networks:
+      - gasleap-network
+
+  # 🗄️ DATABASE ADMIN (pgAdmin)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gasleap-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@gasleap.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      - postgres-db
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    networks:
+      - gasleap-network
+
+  # 🔧 REDIS COMMANDER
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: gasleap-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis-cache:6379
+    depends_on:
+      - redis-cache
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    networks:
+      - gasleap-network
+
+  # 📊 JAEGER TRACING
+  jaeger-tracing:
+    image: jaegertracing/all-in-one:latest
+    container_name: gasleap-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "6831:6831/udp" # Jaeger agent
+      - "14268:14268"   # Jaeger collector
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=debug
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    networks:
+      - gasleap-network
+
+  # 🧪 MOCK TARGET PARACHAIN
+  mock-target-parachain:
+    build:
+      context: ./docker/mock-parachain
+      dockerfile: Dockerfile
+    container_name: gasleap-mock-parachain
+    ports:
+      - "9948:9944"
+      - "9938:9933"
+    environment:
+      - MOCK_MODE=true
+      - CHAIN_NAME=MockChain
+      - RUST_LOG=info
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - gasleap-network
+
+  # Local Astar parachain (for demo)
+  astar-local:
+    image: staketechnologies/astar-collator:latest
+    ports:
+      - "9945:9944"
+      - "9934:9933"
+    volumes:
+      - astar-data:/data
+    environment:
+      - RUST_LOG=info
+    command: [
+      "--dev",
+      "--ws-external",
+      "--rpc-external",
+      "--rpc-cors=all",
+      "--base-path=/data",
+      "--port=30334"
+    ]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - gasleap-network
+
+  # Local Acala parachain (for demo)
+  acala-local:
+    image: acala/acala-node:latest
+    ports:
+      - "9946:9944"
+      - "9935:9933"
+    volumes:
+      - acala-data:/data
+    environment:
+      - RUST_LOG=info
+    command: [
+      "--dev",
+      "--ws-external",
+      "--rpc-external",
+      "--rpc-cors=all",
+      "--base-path=/data",
+      "--port=30335"
+    ]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - gasleap-network
+
+  # 🌐 NGINX PROXY (for production-like setup)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: gasleap-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - frontend
+      - api-server
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.1'
+    networks:
+      - gasleap-network
+
+volumes:
+  gasleap-data:
+  astar-data:
+  acala-data:
+  postgres-data:
+  redis-data:
+  pgadmin-data:
+
+networks:
+  gasleap-network:
+    driver: bridge

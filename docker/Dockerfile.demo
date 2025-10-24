@@ -1,0 +1,72 @@
+# All-in-one demo container for hackathon judges
+FROM rust:1.70 as node-builder
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    clang \
+    libclang-dev \
+    cmake \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /gasleap
+COPY . .
+RUN cargo build --release
+
+# Frontend builder stage
+FROM node:18-alpine as frontend-builder
+
+WORKDIR /app
+
+# Build SDK first
+COPY sdk/ ./sdk/
+WORKDIR /app/sdk
+RUN npm ci && npm run build
+
+# Build frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ .
+RUN npm run build
+
+# Final demo stage
+FROM ubuntu:22.04
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    nginx \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy node binary
+COPY --from=node-builder /gasleap/target/release/gasleap-node /usr/local/bin/
+
+# Copy frontend build
+COPY --from=frontend-builder /app/frontend/build /var/www/html
+
+# Copy demo configuration files
+COPY docker/demo-configs/ /etc/demo/
+
+# Copy supervisor configuration
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy nginx configuration
+COPY docker/nginx-demo.conf /etc/nginx/sites-available/default
+
+# Copy demo setup script
+COPY docker/demo-setup.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/demo-setup.sh
+
+# Create data directory
+RUN mkdir -p /data
+
+# Expose ports
+EXPOSE 3000 9944 9933 9945 9946
+
+# Start supervisor (manages all services)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

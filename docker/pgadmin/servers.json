@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "GasLeap PostgreSQL",
+      "Group": "GasLeap Servers",
+      "Host": "postgres-db",
+      "Port": 5432,
+      "MaintenanceDB": "gasleap",
+      "Username": "gasleap",
+      "SSLMode": "prefer",
+      "Comment": "Main GasLeap database for transaction history and analytics"
+    }
+  }
+}

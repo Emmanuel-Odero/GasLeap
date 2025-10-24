@@ -1,0 +1,41 @@
+# Multi-stage build for GasLeap node
+FROM rust:1.70 as builder
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    clang \
+    libclang-dev \
+    cmake \
+    build-essential \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /gasleap
+
+# Copy source code
+COPY . .
+
+# Build the node
+RUN cargo build --release
+
+# Runtime stage
+FROM ubuntu:22.04
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder stage
+COPY --from=builder /gasleap/target/release/gasleap-node /usr/local/bin/
+
+# Create data directory
+RUN mkdir -p /data
+
+# Expose ports
+EXPOSE 9944 9933 30333
+
+# Set entrypoint
+ENTRYPOINT ["gasleap-node"]

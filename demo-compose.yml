@@ -1,0 +1,100 @@
+# Demo Docker Compose - Optimized for hackathon judges
+# Single command setup: docker-compose -f demo-compose.yml up -d
+version: '3.8'
+
+services:
+  # All-in-one demo container
+  gasleap-demo:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.demo
+    ports:
+      - "3000:3000"    # Frontend
+      - "9944:9944"    # GasLeap node WebSocket
+      - "9933:9933"    # GasLeap node HTTP
+      - "3003:3003"    # API Backend
+      - "8025:8025"    # MailHog UI
+      - "5050:5050"    # pgAdmin
+      - "8081:8081"    # Redis Commander
+      - "16686:16686"  # Jaeger UI
+    volumes:
+      - demo-data:/data
+      - demo-postgres:/var/lib/postgresql/data
+      - demo-redis:/var/lib/redis
+    environment:
+      - DEMO_MODE=true
+      - PRE_FUNDED_POOLS=true
+      - RUST_LOG=info
+      - REACT_APP_DEMO_MODE=true
+      - DATABASE_URL=postgresql://gasleap:gasleap123@localhost:5432/gasleap
+      - REDIS_URL=redis://localhost:6379
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - demo-network
+
+  # Essential development tools for demo
+  demo-postgres:
+    image: postgres:15-alpine
+    container_name: gasleap-demo-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=gasleap
+      - POSTGRES_USER=gasleap
+      - POSTGRES_PASSWORD=gasleap123
+    volumes:
+      - demo-postgres:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - demo-network
+
+  demo-redis:
+    image: redis:7-alpine
+    container_name: gasleap-demo-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - demo-redis:/data
+    command: redis-server --appendonly yes
+    networks:
+      - demo-network
+
+  demo-mailhog:
+    image: mailhog/mailhog:latest
+    container_name: gasleap-demo-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - demo-network
+
+  demo-pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gasleap-demo-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@gasleap.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+    volumes:
+      - demo-pgadmin:/var/lib/pgadmin
+      - ./docker/pgadmin/servers.json:/pgadmin4/servers.json
+    depends_on:
+      - demo-postgres
+    networks:
+      - demo-network
+
+volumes:
+  demo-data:
+  demo-postgres:
+  demo-redis:
+  demo-pgadmin:
+
+networks:
+  demo-network:
+    driver: bridge
