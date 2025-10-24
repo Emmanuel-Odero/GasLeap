@@ -1,0 +1,89 @@
+[package]
+name = "gasleap-node"
+version = "4.0.0-dev"
+description = "GasLeap parachain node for cross-chain gas sponsorship"
+authors = ["GasLeap Team"]
+homepage = "https://gasleap.dev"
+edition = "2021"
+license = "Unlicense"
+build = "build.rs"
+publish = false
+repository = "https://github.com/gasleap/gasleap/"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[[bin]]
+name = "gasleap-node"
+
+[dependencies]
+clap = { workspace = true, features = ["derive"] }
+log = { workspace = true }
+codec = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+jsonrpsee = { version = "0.16.2", features = ["server"] }
+futures = { workspace = true }
+
+# Local
+gasleap-runtime = { path = "../runtime" }
+
+# Substrate
+frame-benchmarking = { workspace = true }
+frame-benchmarking-cli = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-basic-authorship = { workspace = true }
+sc-chain-spec = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-cli = { workspace = true, features = ["wasmtime"] }
+sc-client-api = { workspace = true }
+sc-consensus = { workspace = true }
+sc-executor = { workspace = true, features = ["wasmtime"] }
+sc-network = { workspace = true }
+sc-network-sync = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-rpc = { workspace = true }
+sc-service = { workspace = true, features = ["wasmtime"] }
+sc-sysinfo = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-telemetry = { workspace = true }
+sc-tracing = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sc-transaction-pool = { workspace = true }
+sc-transaction-pool-api = { workspace = true }
+sp-api = { workspace = true }
+sp-block-builder = { workspace = true }
+sp-blockchain = { workspace = true }
+sp-consensus-aura = { workspace = true }
+sp-core = { workspace = true }
+sp-keystore = { workspace = true }
+sp-io = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+sp-runtime = { workspace = true }
+sp-timestamp = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+substrate-prometheus-endpoint = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+try-runtime-cli = { git = "https://github.com/paritytech/substrate.git", optional = true, branch = "polkadot-v1.0.0" }
+
+# Polkadot
+polkadot-cli = { workspace = true, features = ["rococo-native"] }
+polkadot-primitives = { workspace = true }
+xcm = { workspace = true }
+
+# Cumulus
+cumulus-client-cli = { workspace = true }
+cumulus-client-consensus-aura = { workspace = true }
+cumulus-client-consensus-common = { workspace = true }
+cumulus-client-service = { workspace = true }
+cumulus-primitives-core = { workspace = true }
+cumulus-primitives-parachain-inherent = { workspace = true }
+cumulus-relay-chain-interface = { workspace = true }
+
+[build-dependencies]
+substrate-build-script-utils = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+
+[features]
+default = []
+runtime-benchmarks = [
+	"try-runtime-cli/try-runtime",
+	"gasleap-runtime/runtime-benchmarks",
+	"polkadot-cli/runtime-benchmarks",
+]
+try-runtime = [
+	"try-runtime-cli/try-runtime",
+	"gasleap-runtime/try-runtime"
+]
