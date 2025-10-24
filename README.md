@@ -185,9 +185,9 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup and usage instructions.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🏆 Hackathon Submission
+## 🏆 What We Think You Should Know
 
-This project was built for [Hackathon Name] with the following goals:
+This project was built for with the following goals:
 
 - **Problem**: Complex gas management across Polkadot parachains
 - **Solution**: Seamless cross-chain gas sponsorship
