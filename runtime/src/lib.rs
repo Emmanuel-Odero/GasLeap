@@ -793,6 +793,57 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl gasleap_sponsorship_rpc_runtime_api::SponsorshipApi<Block, AccountId, Balance, BlockNumber> for Runtime {
+		fn get_pool(pool_id: pallet_sponsorship::PoolId) -> Option<pallet_sponsorship::PoolInfo<AccountId, Balance, BlockNumber>> {
+			Sponsorship::get_pool_info(pool_id).map(|pool_info| pallet_sponsorship::PoolInfo {
+				owner: pool_info.owner,
+				balance: pool_info.balance,
+				total_spent: pool_info.total_spent,
+				created_at: pool_info.created_at,
+				config: pool_info.config,
+				status: pool_info.status,
+			})
+		}
+
+		fn get_pools_by_owner(owner: AccountId) -> Vec<(pallet_sponsorship::PoolId, pallet_sponsorship::PoolInfo<AccountId, Balance, BlockNumber>)> {
+			Sponsorship::get_pools_by_owner_account(&owner)
+				.into_iter()
+				.map(|(pool_id, pool_info)| (pool_id, pallet_sponsorship::PoolInfo {
+					owner: pool_info.owner,
+					balance: pool_info.balance,
+					total_spent: pool_info.total_spent,
+					created_at: pool_info.created_at,
+					config: pool_info.config,
+					status: pool_info.status,
+				}))
+				.collect()
+		}
+
+		fn get_transaction_history(pool_id: pallet_sponsorship::PoolId, limit: u32) -> Vec<pallet_sponsorship::TransactionRecord<AccountId, Balance, BlockNumber>> {
+			Sponsorship::get_pool_transaction_history(pool_id, limit)
+				.into_iter()
+				.map(|tx_record| pallet_sponsorship::TransactionRecord {
+					id: tx_record.id,
+					pool_id: tx_record.pool_id,
+					user: tx_record.user,
+					target_chain: tx_record.target_chain,
+					call_hash: tx_record.call_hash,
+					gas_cost: tx_record.gas_cost,
+					status: tx_record.status,
+					timestamp: tx_record.timestamp,
+				})
+				.collect()
+		}
+
+		fn get_user_gas_savings(user: AccountId) -> Balance {
+			Sponsorship::get_user_total_gas_savings(&user)
+		}
+
+		fn estimate_gas_cost(target_chain: u32, call_data: Vec<u8>) -> Balance {
+			Sponsorship::estimate_transaction_gas_cost(target_chain, &call_data)
+		}
+	}
+
 	#[cfg(feature = "try-runtime")]
 	impl frame_try_runtime::TryRuntime<Block> for Runtime {
 		fn on_runtime_upgrade(checks: frame_try_runtime::UpgradeCheckSelect) -> (Weight, Weight) {

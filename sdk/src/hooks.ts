@@ -1,8 +1,29 @@
 /**
  * React hooks for GasLeap SDK integration
+ * Note: These hooks require React to be installed as a peer dependency
  */
 
-import { useState, useEffect, useCallback } from 'react';
+// Conditional React import for environments where React is available
+let React: any;
+let useState: any;
+let useEffect: any;
+let useCallback: any;
+
+try {
+  React = require('react');
+  useState = React.useState;
+  useEffect = React.useEffect;
+  useCallback = React.useCallback;
+} catch (error) {
+  // React not available - hooks will throw runtime errors if used
+  const createMockHook = (name: string) => () => {
+    throw new Error(`${name} requires React to be installed as a peer dependency`);
+  };
+  
+  useState = createMockHook('useState');
+  useEffect = createMockHook('useEffect');
+  useCallback = createMockHook('useCallback');
+}
 import { GasLeapSDK } from './sdk';
 import { GasLeapDemoSDK } from './demo-sdk';
 import { 
@@ -122,68 +143,138 @@ export function useSponsoredTransaction(): UseSponsoredTransactionResult {
 }
 
 /**
- * Hook for gas savings with animated counter
+ * Hook for gas savings with animated counter and real-time updates
  */
 export function useGasSavings(): UseGasSavingsResult {
   const [savings, setSavings] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [savingsInfo, setSavingsInfo] = useState<GasSavingsInfo | null>(null);
 
+  const animateToValue = useCallback((newValue: number) => {
+    if (newValue > savings) {
+      setIsAnimating(true);
+      
+      // Smooth animation to new value
+      const increment = (newValue - savings) / 30; // 30 frames for smooth animation
+      let current = savings;
+      
+      const animateStep = () => {
+        current += increment;
+        if (current >= newValue) {
+          setSavings(newValue);
+          setIsAnimating(false);
+        } else {
+          setSavings(Math.floor(current));
+          requestAnimationFrame(animateStep);
+        }
+      };
+      
+      requestAnimationFrame(animateStep);
+    } else {
+      setSavings(newValue);
+    }
+  }, [savings]);
+
   const refresh = useCallback(async () => {
     try {
       const demoSDK = GasLeapDemoSDK.getInstance();
-      const newSavings = await demoSDK.getGasSavings();
+      const savingsData = await demoSDK.getGasSavingsWithUpdates();
       
-      if (newSavings > savings) {
-        setIsAnimating(true);
-        
-        // Animate counter upward
-        const increment = (newSavings - savings) / 20;
-        let current = savings;
-        
-        const animateStep = () => {
-          current += increment;
-          if (current >= newSavings) {
-            setSavings(newSavings);
-            setIsAnimating(false);
-          } else {
-            setSavings(Math.floor(current));
-            requestAnimationFrame(animateStep);
-          }
-        };
-        
-        requestAnimationFrame(animateStep);
-      } else {
-        setSavings(newSavings);
-      }
+      animateToValue(savingsData.current);
 
-      // Mock savings info for demo
+      // Update savings info with real-time data
       setSavingsInfo({
-        totalSaved: newSavings.toString(),
-        transactionCount: Math.floor(newSavings / 20),
-        dailySaved: Math.floor(newSavings * 0.3).toString(),
-        averagePerTransaction: '20',
+        totalSaved: savingsData.current.toString(),
+        transactionCount: Math.floor(savingsData.current / savingsData.dailyAverage) || 1,
+        dailySaved: Math.floor(savingsData.dailyAverage).toString(),
+        averagePerTransaction: Math.floor(savingsData.dailyAverage).toString(),
       });
     } catch (error) {
       console.error('Failed to refresh gas savings:', error);
     }
-  }, [savings]);
+  }, [animateToValue]);
 
-  // Auto-refresh every 5 seconds
+  // Set up real-time event listeners
   useEffect(() => {
-    const interval = setInterval(refresh, 5000);
+    const demoSDK = GasLeapDemoSDK.getInstance();
+    
+    // Start real-time tracking
+    demoSDK.startRealTimeTracking();
+
+    // Listen for real-time updates
+    const handleGasSavingsUpdate = (data: { newSavings: number; increment: number }) => {
+      animateToValue(data.newSavings);
+    };
+
+    demoSDK.on('gas_savings_updated', handleGasSavingsUpdate);
+
+    // Initial load
+    refresh();
+
+    // Cleanup
+    return () => {
+      demoSDK.off('gas_savings_updated', handleGasSavingsUpdate);
+    };
+  }, [refresh, animateToValue]);
+
+  // Fallback polling for reliability
+  useEffect(() => {
+    const interval = setInterval(refresh, 10000); // Every 10 seconds as fallback
     return () => clearInterval(interval);
   }, [refresh]);
-
-  // Initial load
-  useEffect(() => {
-    refresh();
-  }, []);
 
   return {
     savings,
     isAnimating,
     savingsInfo,
+    refresh,
+  };
+}
+
+/**
+ * Hook for transaction history with real-time updates
+ */
+export function useTransactionHistory(limit: number = 20) {
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const demoSDK = GasLeapDemoSDK.getInstance();
+      const history = demoSDK.getTransactionHistory(limit);
+      setTransactions(history);
+    } catch (error) {
+      console.error('Failed to load transaction history:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [limit]);
+
+  useEffect(() => {
+    const demoSDK = GasLeapDemoSDK.getInstance();
+
+    // Listen for new transactions
+    const handleTransactionUpdate = () => {
+      refresh();
+    };
+
+    demoSDK.on('transaction_history_updated', handleTransactionUpdate);
+    demoSDK.on('transaction_sponsored', handleTransactionUpdate);
+
+    // Initial load
+    refresh();
+
+    // Cleanup
+    return () => {
+      demoSDK.off('transaction_history_updated', handleTransactionUpdate);
+      demoSDK.off('transaction_sponsored', handleTransactionUpdate);
+    };
+  }, [refresh]);
+
+  return {
+    transactions,
+    isLoading,
     refresh,
   };
 }

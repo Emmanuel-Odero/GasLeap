@@ -11,8 +11,8 @@ export { GasLeapDemoSDK } from './demo-sdk';
 export * from './types';
 export * from './utils';
 
-// React hooks (optional)
-export * from './hooks';
-
 // Version
 export const VERSION = '0.1.0';
+
+// React hooks are available as a separate export when React is installed
+// import { useGasLeap, useSponsoredTransaction, useGasSavings } from '@gasleap/sdk/hooks';
