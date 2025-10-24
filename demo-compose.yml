@@ -3,31 +3,133 @@
 version: '3.8'
 
 services:
-  # All-in-one demo container
-  gasleap-demo:
+  # GasLeap parachain node
+  gasleap-node:
     build:
       context: .
-      dockerfile: docker/Dockerfile.demo
+      dockerfile: docker/Dockerfile.node
     ports:
-      - "3000:3000"    # Frontend
-      - "9944:9944"    # GasLeap node WebSocket
-      - "9933:9933"    # GasLeap node HTTP
-      - "3003:3003"    # API Backend
-      - "8025:8025"    # MailHog UI
-      - "5050:5050"    # pgAdmin
-      - "8081:8081"    # Redis Commander
-      - "16686:16686"  # Jaeger UI
+      - "9944:9944"    # WebSocket RPC
+      - "9933:9933"    # HTTP RPC
+    volumes:
+      - demo-gasleap-data:/data
+    environment:
+      - RUST_LOG=info
+      - DEMO_MODE=true
+    command: [
+      "--dev",
+      "--ws-external", 
+      "--rpc-external",
+      "--rpc-cors=all",
+      "--base-path=/data",
+      "--parachain-id=2000"
+    ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9933/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - demo-network
+
+  # Astar local parachain (mock for demo)
+  astar-local:
+    image: parity/substrate:latest
+    ports:
+      - "9945:9944"    # WebSocket RPC
+      - "9934:9933"    # HTTP RPC
+    volumes:
+      - demo-astar-data:/data
+    environment:
+      - RUST_LOG=info
+    command: [
+      "--dev",
+      "--ws-external",
+      "--rpc-external", 
+      "--rpc-cors=all",
+      "--base-path=/data",
+      "--port=30334",
+      "--chain=local"
+    ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9933/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - demo-network
+
+  # Acala local parachain (mock for demo)
+  acala-local:
+    image: parity/substrate:latest
+    ports:
+      - "9946:9944"    # WebSocket RPC
+      - "9935:9933"    # HTTP RPC
+    volumes:
+      - demo-acala-data:/data
+    environment:
+      - RUST_LOG=info
+    command: [
+      "--dev",
+      "--ws-external",
+      "--rpc-external",
+      "--rpc-cors=all", 
+      "--base-path=/data",
+      "--port=30335",
+      "--chain=local"
+    ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9933/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - demo-network
+
+  # Demo data seeder
+  demo-seeder:
+    build:
+      context: ./docker/scripts
+      dockerfile: Dockerfile.seeder
+    environment:
+      - GASLEAP_ENDPOINT=ws://gasleap-node:9944
+      - ASTAR_ENDPOINT=ws://astar-local:9944
+      - ACALA_ENDPOINT=ws://acala-local:9944
     volumes:
       - demo-data:/data
-      - demo-postgres:/var/lib/postgresql/data
-      - demo-redis:/var/lib/redis
+    depends_on:
+      gasleap-node:
+        condition: service_healthy
+      astar-local:
+        condition: service_healthy
+      acala-local:
+        condition: service_healthy
+    networks:
+      - demo-network
+
+  # Frontend application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"    # Frontend
+    volumes:
+      - demo-data:/data
     environment:
-      - DEMO_MODE=true
-      - PRE_FUNDED_POOLS=true
-      - RUST_LOG=info
+      - REACT_APP_GASLEAP_ENDPOINT=ws://gasleap-node:9944
+      - REACT_APP_ASTAR_ENDPOINT=ws://astar-local:9944
+      - REACT_APP_ACALA_ENDPOINT=ws://acala-local:9944
+      - REACT_APP_API_ENDPOINT=http://api-server:3003
       - REACT_APP_DEMO_MODE=true
-      - DATABASE_URL=postgresql://gasleap:gasleap123@localhost:5432/gasleap
-      - REDIS_URL=redis://localhost:6379
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - gasleap-node
+      - api-server
+      - demo-seeder
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
