@@ -9,15 +9,9 @@ use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup}, BuildStorage,
 };
 
-type Block = frame_system::mocking::MockBlock<Test>;
-
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
-	pub struct Test
-	where
-		Block = Block,
-		NodeBlock = Block,
-		UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>,
+	pub enum Test
 	{
 		System: frame_system,
 		Balances: pallet_balances,
@@ -32,13 +26,12 @@ impl frame_system::Config for Test {
 	type DbWeight = ();
 	type RuntimeOrigin = RuntimeOrigin;
 	type RuntimeCall = RuntimeCall;
-	type Index = u64;
-	type BlockNumber = u64;
+	type Nonce = u64;
+	type Block = frame_system::mocking::MockBlock<Test>;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
-	type Header = sp_runtime::generic::Header<Self::BlockNumber, BlakeTwo256>;
 	type RuntimeEvent = RuntimeEvent;
 	type BlockHashCount = ConstU64<250>;
 	type Version = ();
@@ -84,11 +77,25 @@ impl pallet_sponsorship::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
-	pallet_balances::GenesisConfig::<Test> {
-		balances: vec![(1, 10000), (2, 20000), (3, 30000)],
-	}
-	.assimilate_storage(&mut t)
-	.unwrap();
-	t.into()
+	let t = frame_system::GenesisConfig::<Test>::default().build_storage().unwrap();
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| {
+		// Initialize balances
+		let _ = pallet_balances::Pallet::<Test>::force_set_balance(
+			frame_system::RawOrigin::Root.into(),
+			1,
+			10000,
+		);
+		let _ = pallet_balances::Pallet::<Test>::force_set_balance(
+			frame_system::RawOrigin::Root.into(),
+			2,
+			20000,
+		);
+		let _ = pallet_balances::Pallet::<Test>::force_set_balance(
+			frame_system::RawOrigin::Root.into(),
+			3,
+			30000,
+		);
+	});
+	ext
 }

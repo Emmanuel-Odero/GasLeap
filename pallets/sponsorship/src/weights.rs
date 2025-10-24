@@ -35,6 +35,7 @@ pub trait WeightInfo {
 	fn add_authorization_rule() -> Weight;
 	fn remove_authorization_rule() -> Weight;
 	fn sponsor_transaction() -> Weight;
+	fn process_receipt() -> Weight;
 }
 
 /// Weights for pallet_sponsorship using the Substrate node and recommended hardware.
@@ -118,6 +119,19 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 			.saturating_add(T::DbWeight::get().reads(2_u64))
 			.saturating_add(T::DbWeight::get().writes(3_u64))
 	}
+	/// Storage: Sponsorship TransactionLog (r:1 w:1)
+	/// Proof: Sponsorship TransactionLog (max_values: None, max_size: Some(1000), added: 2475, mode: MaxEncodedLen)
+	/// Storage: Sponsorship Pools (r:1 w:1)
+	/// Proof: Sponsorship Pools (max_values: None, max_size: Some(1000), added: 2475, mode: MaxEncodedLen)
+	fn process_receipt() -> Weight {
+		// Proof Size summary in bytes:
+		//  Measured:  `400`
+		//  Estimated: `3465`
+		// Minimum execution time: 15_000_000 picoseconds.
+		Weight::from_parts(16_000_000, 3465)
+			.saturating_add(T::DbWeight::get().reads(2_u64))
+			.saturating_add(T::DbWeight::get().writes(2_u64))
+	}
 }
 
 // For backwards compatibility and tests
@@ -151,5 +165,10 @@ impl WeightInfo for () {
 		Weight::from_parts(19_000_000, 3465)
 			.saturating_add(RocksDbWeight::get().reads(2_u64))
 			.saturating_add(RocksDbWeight::get().writes(3_u64))
+	}
+	fn process_receipt() -> Weight {
+		Weight::from_parts(16_000_000, 3465)
+			.saturating_add(RocksDbWeight::get().reads(2_u64))
+			.saturating_add(RocksDbWeight::get().writes(2_u64))
 	}
 }
