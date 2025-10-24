@@ -24,6 +24,7 @@ serde = { workspace = true, optional = true, features = ["derive"] }
 
 # Local
 pallet-sponsorship = { path = "../pallets/sponsorship", default-features = false }
+gasleap-sponsorship-rpc-runtime-api = { path = "../pallets/sponsorship/rpc/runtime-api", default-features = false }
 
 # Substrate
 frame-benchmarking = { workspace = true, optional = true }
@@ -100,6 +101,7 @@ std = [
 	"pallet-collator-selection/std",
 	"pallet-grandpa/std",
 	"pallet-sponsorship/std",
+	"gasleap-sponsorship-rpc-runtime-api/std",
 	"pallet-sudo/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
